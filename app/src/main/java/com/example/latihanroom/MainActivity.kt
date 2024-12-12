@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.latihanroom.database.daftarBelanja
 import com.example.latihanroom.database.daftarBelanjaDB
+import com.example.latihanroom.database.historyBarangDB
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -33,6 +34,9 @@ class MainActivity : AppCompatActivity() {
         adapterDaftar = adapterDaftar(arDaftar)
 
         DB = daftarBelanjaDB.getDatabase(this)
+        DB2 = historyBarangDB.getDatabase(this)
+
+        adapterDaftar.setDatabaseReferences(DB, DB2)
 
         _fabAdd.setOnClickListener {
             startActivity(Intent(this, TambahDaftar::class.java))
@@ -60,12 +64,16 @@ class MainActivity : AppCompatActivity() {
         CoroutineScope(Dispatchers.Main).async {
             val daftarBelanja = DB.fundaftarBelanjaDAO().selectAll()
             Log.d("data ROOM", daftarBelanja.toString())
+
+            val historyBarang = DB2.funhistoryBarangDAO().selectAll()
+            Log.d("data ROOM2", historyBarang.toString())
             adapterDaftar.isiData(daftarBelanja)
         }
 
 
     }
     private lateinit var DB : daftarBelanjaDB
+    private lateinit var DB2 : historyBarangDB
 
     private lateinit var adapterDaftar: adapterDaftar
 

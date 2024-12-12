@@ -4,10 +4,18 @@ import android.content.Intent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.latihanroom.database.daftarBelanja
+import com.example.latihanroom.database.daftarBelanjaDB
+import com.example.latihanroom.database.historyBarang
+import com.example.latihanroom.database.historyBarangDB
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+
 
 class adapterDaftar (private val daftarBelanja : MutableList<daftarBelanja>): RecyclerView.Adapter<adapterDaftar.ListViewHolder>() {
     class ListViewHolder (itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -15,9 +23,19 @@ class adapterDaftar (private val daftarBelanja : MutableList<daftarBelanja>): Re
         var _tvjumlahBarang = itemView.findViewById<TextView>(R.id.tvjumlahBarang)
         var _tvTanggal = itemView.findViewById<TextView>(R.id.tvTanggal)
 
+        var _btnSelesai = itemView.findViewById<Button>(R.id.btnSelesai)
         var _btnEdit = itemView.findViewById<ImageView>(R.id.btnEdit)
         var _btnDelete = itemView.findViewById<ImageView>(R.id.btnDelete)
     }
+
+    private lateinit var db1: daftarBelanjaDB
+    private lateinit var db2: historyBarangDB
+
+    fun setDatabaseReferences(db1: daftarBelanjaDB, db2: historyBarangDB) {
+        this.db1 = db1
+        this.db2 = db2
+    }
+
     override fun onCreateViewHolder(
         parent: ViewGroup,
         viewType: Int
@@ -48,7 +66,26 @@ class adapterDaftar (private val daftarBelanja : MutableList<daftarBelanja>): Re
         holder._btnDelete.setOnClickListener {
             onItemClickCallback.delData(daftar)
         }
+
+        holder._btnSelesai.setOnClickListener {
+            CoroutineScope(Dispatchers.IO).async {
+                val historyDAO = db2.funhistoryBarangDAO()
+                historyDAO.insert(
+                    historyBarang(
+                        item = daftar.item,
+                        jumlah = daftar.jumlah,
+                        tanggal = daftar.tanggal
+                    )
+                )
+
+                val daftarDAO = db1.fundaftarBelanjaDAO()
+                daftarDAO.delete(daftar)
+            }
+        }
+
     }
+
+
 
     interface OnItemClickCallback {
         fun delData(dtBelanja: daftarBelanja)
@@ -63,6 +100,8 @@ class adapterDaftar (private val daftarBelanja : MutableList<daftarBelanja>): Re
         daftarBelanja.addAll(daftar)
         notifyDataSetChanged()
     }
+
+
 
     private lateinit var onItemClickCallback : OnItemClickCallback
 
