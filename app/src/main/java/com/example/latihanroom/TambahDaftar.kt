@@ -1,6 +1,7 @@
 package com.example.latihanroom
 
 import android.os.Bundle
+import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import androidx.activity.enableEdgeToEdge
@@ -13,6 +14,7 @@ import com.example.latihanroom.helper.DateHelper.getCurrentDate
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlin.math.tan
 
 class TambahDaftar : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -29,6 +31,28 @@ class TambahDaftar : AppCompatActivity() {
         val _btnTambah = findViewById<Button>(R.id.btnTambah)
         val _btnUpdate = findViewById<Button>(R.id.btnUpdate)
 
+        var iID : Int = 0
+        var iAddEdit : Int = 0
+
+        iID = intent.getIntExtra("id", 0)
+        iAddEdit = intent.getIntExtra("addEdit", 0)
+
+        if (iAddEdit == 0) {
+            _btnTambah.visibility = View.VISIBLE
+            _btnUpdate.visibility = View.GONE
+            _etItem.isEnabled = true
+        } else {
+            _btnTambah.visibility = View.GONE
+            _btnUpdate.visibility = View.VISIBLE
+            _etItem.isEnabled = false
+
+            CoroutineScope(Dispatchers.IO).async {
+                val item = DB.fundaftarBelanjaDAO().getItem(iID)
+                _etItem.setText(item.item)
+                _etJumlah.setText(item.jumlah)
+            }
+        }
+
         _btnTambah.setOnClickListener {
             CoroutineScope(Dispatchers.IO).async {
                 DB.fundaftarBelanjaDAO().insert(
@@ -40,6 +64,17 @@ class TambahDaftar : AppCompatActivity() {
                 )
             }
 
+        }
+
+        _btnUpdate.setOnClickListener {
+            CoroutineScope(Dispatchers.IO).async {
+                DB.fundaftarBelanjaDAO().update(
+                    isi_tanggal = tanggal,
+                    isi_item = _etItem.text.toString(),
+                    isi_jumlah = _etJumlah.text.toString(),
+                    pilihid = iID
+                )
+            }
         }
     }
     var DB = daftarBelanjaDB.getDatabase(this)
